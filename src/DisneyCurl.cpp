@@ -34,7 +34,7 @@ MemoryStruct DisneyCurl::Request(std::string url) {
 
     chunk.memory = static_cast<char *>(malloc(1));  /* will be grown as needed by the realloc above */
     chunk.size = 0;    /* no data at this point */
-
+    long httpResponseCode(0);
     //curl_global_init(CURL_GLOBAL_ALL);
     curl_global_init(CURL_GLOBAL_DEFAULT);
     /* init the curl session */
@@ -60,7 +60,10 @@ MemoryStruct DisneyCurl::Request(std::string url) {
     curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 0L);
     /* get it! */
     res = curl_easy_perform(curl_handle);
-
+    curl_easy_getinfo (curl_handle, CURLINFO_RESPONSE_CODE, &httpResponseCode);
+    if(httpResponseCode!=200){
+        throw 20;
+    }
     /* check for errors */
     if(res != CURLE_OK) {
         fprintf(stderr, "curl_easy_perform() failed: %s\n",
@@ -92,9 +95,9 @@ std::string DisneyCurl::GetJson(std::string url){
     return str;
 }
 
-DisneyImage DisneyCurl::GetImage(std::string url){
+std::shared_ptr<DisneyImage> DisneyCurl::GetImage(std::string url){
     struct MemoryStruct chunk = Request(url);
-    DisneyImage di((unsigned char*)chunk.memory, chunk.size);
+    std::shared_ptr<DisneyImage> di = std::make_shared<DisneyImage>((unsigned char*)chunk.memory, chunk.size);//new DisneyImage((unsigned char*)chunk.memory, chunk.size);
     free(chunk.memory);
     return di;
 }

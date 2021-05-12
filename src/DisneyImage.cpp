@@ -43,10 +43,36 @@ DisneyImage::DisneyImage(unsigned char* data, int len) {
 
     surf = SDL_CreateRGBSurfaceWithFormatFrom((void*)image, width, height,
                                               depth, pitch, pixel_format);
+    stbi_image_free(image);
 }
 
 DisneyImage::~DisneyImage() {
     SDL_FreeSurface(surf);
+    std::cout << "Destructing image" << std::endl;
 //    SDL_DestroyTexture(texture);
 //    SDL_DestroyRenderer(renderer);
+}
+
+SDL_Surface *DisneyImage::getSurf() const {
+    return surf;
+}
+
+void DisneyImage::setSurf(SDL_Surface *surf) {
+    DisneyImage::surf = surf;
+}
+
+SDL_Texture *DisneyImage::getTexture() const {
+    return texture;
+}
+
+void DisneyImage::setTexture(SDL_Texture *texture) {
+    DisneyImage::texture = texture;
+}
+
+SDL_Renderer *DisneyImage::getRenderer() const {
+    return renderer;
+}
+
+void DisneyImage::setRenderer(SDL_Renderer *renderer) {
+    DisneyImage::renderer = renderer;
 }
