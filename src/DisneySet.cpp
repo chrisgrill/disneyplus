@@ -2,6 +2,7 @@
 // Created by chris on 5/11/21.
 //
 
+
 #include "DisneySet.h"
 
 DisneySet::DisneySet() {
@@ -10,7 +11,7 @@ DisneySet::DisneySet() {
 
 DisneySet::DisneySet(json data, SDL_Renderer * renderer) {
     if(data["set"]["type"] == "SetRef"){
-        json refSet = json::parse(DisneyCurl::GetJson("https://cd-static.bamgrid.com/dp-117731241344/sets/bd1bfb9a-bbf7-43a0-ac5e-3e3889d7224d.json"));
+        json refSet = json::parse(DisneyCurl::GetJson("https://cd-static.bamgrid.com/dp-117731241344/sets/" + (std::string)data["set"]["refId"] + ".json"));
         parse_set(refSet["data"]["CuratedSet"], renderer);
     }
     else{

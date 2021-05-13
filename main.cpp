@@ -2,6 +2,7 @@
 #include <curl/curl.h>
 #include <iostream>
 #include <memory>
+#include <algorithm>
 #include "DisneyCurl.h"
 #include "DisneySet.h"
 #include "json/single_include/nlohmann/json.hpp"
@@ -9,7 +10,6 @@ using json = nlohmann::json;
 
 int main(int argc, char ** argv)
 {
-
     std::string home_json = DisneyCurl::GetJson("https://cd-static.bamgrid.com/dp-117731241344/home.json");
     json data = json::parse(home_json)["data"]["StandardCollection"]["containers"];
     std::cout << data.size() << std::endl;
@@ -18,7 +18,6 @@ int main(int argc, char ** argv)
 
     bool quit = false;
     SDL_Event event;
-    DisneyImage background("../disney.jpg");
     SDL_Init(SDL_INIT_VIDEO);
     SDL_Window * window = SDL_CreateWindow("Disney+",
                                            SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1280, 720, 0);
@@ -28,9 +27,8 @@ int main(int argc, char ** argv)
         if(row_set->getSize() > 0) page_set.push_back(row_set);
     }
 
-    SDL_Texture * back_tex = SDL_CreateTextureFromSurface(renderer, background.getSurf());
     int x = 5;
-    int y = 5;
+    int y = 280;
     int selected_row = 0;
     while (!quit)
     {
@@ -50,33 +48,32 @@ int main(int argc, char ** argv)
                         page_set[selected_row]->rotate(DisneySet::RIGHT) ;
                         break;
                     case SDLK_UP:
-                        selected_row -= 1;
-                        selected_row = std::max(0,selected_row);
+                        std::rotate(page_set.begin(), page_set.begin()-1+page_set.size(), page_set.end());
                         break;
                     case SDLK_DOWN:
-                        selected_row += 1;
-                        selected_row = std::min((int)page_set.size()-1,selected_row);
+
+                        std::rotate(page_set.begin(), page_set.begin()+1, page_set.end());
                         break;
                 }
                 break;
         }
 
         SDL_Rect back_rec = {0,0,1280,720};
-        SDL_RenderCopy(renderer, back_tex, NULL, &back_rec);
+        //SDL_RenderCopy(renderer, back_tex, NULL, &back_rec);
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 0);
-        SDL_Rect border = {3,3+((int)selected_row*145),253,143};
+        SDL_Rect border = {3,280+((int)selected_row*145),253,143};
         SDL_RenderFillRect(renderer, &border);
 
         for(int i=0; i < page_set.size(); i++){
             for(int j=0; j < page_set[i]->tile_set.size(); j++){
                 int width = 250;
                 int height = 140;
-                if(i==selected_row){
-                    if(j==0){
-                        width = 375;
-                        height = 210;
-                    }
-                }
+//                if(i==selected_row){
+//                    if(j==0){
+//                        width = 375;
+//                        height = 210;
+//                    }
+//                }
 
                 int b = ((int)page_set[i]->tile_set.size()*255);
 
@@ -87,6 +84,7 @@ int main(int argc, char ** argv)
         }
         SDL_RenderPresent(renderer);
     }
+
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
