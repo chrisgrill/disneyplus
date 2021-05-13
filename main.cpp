@@ -1,4 +1,5 @@
 #include <SDL.h>
+#include <SDL_ttf.h>
 #include <curl/curl.h>
 #include <iostream>
 #include <memory>
@@ -19,9 +20,36 @@ int main(int argc, char ** argv)
     bool quit = false;
     SDL_Event event;
     SDL_Init(SDL_INIT_VIDEO);
+    TTF_Init();
+
     SDL_Window * window = SDL_CreateWindow("Disney+",
-                                           SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1280, 720, 0);
+                                           SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1920, 1080, 0);
     SDL_Renderer * renderer = SDL_CreateRenderer(window, -1, 0);
+    /*--------------------------------- Text Setup------------------------------------------------------------------------*/
+    TTF_Font *font = TTF_OpenFont("../fonts/DejaVuSans.ttf", 40);
+    if(!font) {
+        printf("Unable to load font: '%s'!\n"
+               "SDL2_ttf Error: %s\n", "../fonts/DejaVuSans.ttf", TTF_GetError());
+        return 0;
+    }
+    SDL_Color textColor           = { 0x00, 0x00, 0x00, 0xFF };
+    SDL_Color textBackgroundColor = { 0xFF, 0xFF, 0xFF, 0xFF };
+    SDL_Texture *text = NULL;
+    SDL_Rect textRect = {5,5,200,140};
+    SDL_Surface *textSurface = TTF_RenderText_Shaded(font, "Rated PG-13", textColor, textBackgroundColor);
+    if(!textSurface) {
+        printf("Unable to render text surface!\n"
+               "SDL2_ttf Error: %s\n", TTF_GetError());
+    } else {
+        // Create texture from surface pixels
+        text = SDL_CreateTextureFromSurface(renderer, textSurface);
+        if (!text) {
+            printf("Unable to create texture from rendered text!\n"
+                   "SDL2 Error: %s\n", SDL_GetError());
+            return 0;
+        }
+    }
+    /*--------------------------------------------------------- End Text -------------------------------------------------*/
     for(int i=0;i<data.size();i++){
         DisneySet* row_set = new DisneySet(data[i], renderer);
         if(row_set->getSize() > 0) page_set.push_back(row_set);
@@ -82,6 +110,7 @@ int main(int argc, char ** argv)
                 SDL_RenderCopy(renderer, page_set[i]->tile_set[j]->getTexture(), NULL, &dstrect);
             }
         }
+        SDL_RenderCopy(renderer, text, NULL, &textRect);
         SDL_RenderPresent(renderer);
     }
 
