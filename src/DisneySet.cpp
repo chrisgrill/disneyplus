@@ -36,6 +36,37 @@ void DisneySet::PushBack(std::shared_ptr<DisneyTile> tile) {
     tile_set.push_back(tile);
 }
 
+void DisneySet::RenderText(std::string text, SDL_Rect rect, TTF_Font* font, SDL_Renderer* renderer) {
+    SDL_Color textColor           = { 0xFF, 0xFF, 0xFF, 0xFF };
+    SDL_Texture *text_tex = NULL;
+    SDL_Surface *text_surf = TTF_RenderText_Blended(font, text.c_str(), textColor);
+    if(!text_surf) {
+        printf("Unable to render text surface!\n"
+               "SDL2_ttf Error: %s\n", TTF_GetError());
+    } else {
+        // Create texture from surface pixels
+        text_tex = SDL_CreateTextureFromSurface(renderer, text_surf);
+        if (!text_tex) {
+            printf("Unable to create texture from rendered text!\n"
+                   "SDL2 Error: %s\n", SDL_GetError());
+
+        }
+        SDL_FreeSurface(text_surf);
+    }
+    SDL_RenderCopy(renderer, text_tex, NULL, &rect);
+}
+void DisneySet::LoadBackground(SDL_Renderer* renderer, TTF_Font* font) {
+    std::shared_ptr<DisneyImage> background = DisneyCurl::GetImage(tile_set[0]->background_url);
+    SDL_Texture * back_tex = SDL_CreateTextureFromSurface(renderer, background->getSurf());
+    SDL_Rect back_rec = {0,0,1280,720};
+    SDL_RenderCopy(renderer, back_tex, NULL, &back_rec);
+
+    SDL_Rect rating_rect = {5,17,(int)tile_set[0]->rating.size()*12,16};
+    SDL_Rect title_rect = {5,5,(int)tile_set[0]->title.size()*12,16};
+    RenderText(tile_set[0]->title, title_rect, font, renderer);
+    RenderText(tile_set[0]->rating, rating_rect, font, renderer);
+}
+
 int DisneySet::GetSize(){
     return tile_set.size();
 }
@@ -69,8 +100,4 @@ void DisneySet::ParseSet(json data, SDL_Renderer* renderer) {
             std::cout << "Exception" << std::endl;
         }
     }
-}
-
-void DisneySet::parse_ref_set(json data, SDL_Renderer* renderer){
-
 }

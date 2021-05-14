@@ -16,7 +16,7 @@ int main(int argc, char ** argv)
     json data = json::parse(home_json)["data"]["StandardCollection"]["containers"];
     std::cout << data.size() << std::endl;
 
-    std::vector<DisneySet*> page_set;
+    std::vector<std::shared_ptr<DisneySet>> page_set;
 
     bool quit = false;
     SDL_Event event;
@@ -33,35 +33,36 @@ int main(int argc, char ** argv)
                "SDL2_ttf Error: %s\n", "../fonts/DejaVuSans.ttf", TTF_GetError());
         return 0;
     }
-    SDL_Color textColor           = { 0x00, 0x00, 0x00, 0xFF };
-    SDL_Color textBackgroundColor = { 0xFF, 0xFF, 0xFF, 0xFF };
-    SDL_Texture *text = NULL;
-    SDL_Rect textRect = {5,5,200,140};
-    SDL_Surface *textSurface = TTF_RenderText_Shaded(font, "Rated PG-13", textColor, textBackgroundColor);
-    if(!textSurface) {
-        printf("Unable to render text surface!\n"
-               "SDL2_ttf Error: %s\n", TTF_GetError());
-    } else {
-        // Create texture from surface pixels
-        text = SDL_CreateTextureFromSurface(renderer, textSurface);
-        if (!text) {
-            printf("Unable to create texture from rendered text!\n"
-                   "SDL2 Error: %s\n", SDL_GetError());
-            return 0;
-        }
-        SDL_FreeSurface(textSurface);
-    }
+//    SDL_Color textColor           = { 0x00, 0x00, 0x00, 0xFF };
+//    SDL_Color textBackgroundColor = { 0xFF, 0xFF, 0xFF, 0xFF };
+//    SDL_Texture *text = NULL;
+//    SDL_Rect textRect = {5,5,200,140};
+//    SDL_Surface *textSurface = TTF_RenderText_Shaded(font, "Rated PG-13", textColor, textBackgroundColor);
+//    if(!textSurface) {
+//        printf("Unable to render text surface!\n"
+//               "SDL2_ttf Error: %s\n", TTF_GetError());
+//    } else {
+//        // Create texture from surface pixels
+//        text = SDL_CreateTextureFromSurface(renderer, textSurface);
+//        if (!text) {
+//            printf("Unable to create texture from rendered text!\n"
+//                   "SDL2 Error: %s\n", SDL_GetError());
+//            return 0;
+//        }
+//        SDL_FreeSurface(textSurface);
+//    }
     /*--------------------------------------------------------- End Text -------------------------------------------------*/
 
     /* Load data */
     for(int i=0;i<data.size();i++){
-        DisneySet* row_set = new DisneySet(data[i], renderer);
+        std::shared_ptr<DisneySet> row_set = std::make_shared<DisneySet>(data[i], renderer);
         if(row_set->GetSize() > 0) page_set.push_back(row_set);
     }
 
+
     int x = 5;
     int y = 420;
-    int selected_row = 0;
+    page_set[0]->LoadBackground(renderer, font);
     while (!quit)
     {
         SDL_WaitEvent(&event);
@@ -73,10 +74,10 @@ int main(int argc, char ** argv)
             case SDL_KEYDOWN:
                 switch (event.key.keysym.sym){
                     case SDLK_RIGHT:
-                        page_set[selected_row]->Rotate(DisneySet::LEFT) ;
+                        page_set[0]->Rotate(DisneySet::LEFT) ;
                         break;
                     case SDLK_LEFT:
-                        page_set[selected_row]->Rotate(DisneySet::RIGHT) ;
+                        page_set[0]->Rotate(DisneySet::RIGHT) ;
                         break;
                     case SDLK_UP:
                         std::rotate(page_set.begin(), page_set.begin()-1+page_set.size(), page_set.end());
@@ -87,28 +88,19 @@ int main(int argc, char ** argv)
                         break;
                 }
 
-                std::shared_ptr<DisneyImage> background = DisneyCurl::GetImage(page_set[0]->tile_set[0]->background_url);
-                SDL_Texture * back_tex = SDL_CreateTextureFromSurface(renderer, background->getSurf());
-                SDL_Rect back_rec = {0,0,1280,720};
-                SDL_RenderCopy(renderer, back_tex, NULL, &back_rec);
+                page_set[0]->LoadBackground(renderer, font);
                 break;
         }
 
 
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 0);
-        SDL_Rect border = {3,420+((int)selected_row*145),253,143};
+        SDL_Rect border = {3,420,253,143};
         SDL_RenderFillRect(renderer, &border);
 
         for(int i=0; i < page_set.size(); i++){
             for(int j=0; j < page_set[i]->tile_set.size(); j++){
                 int width = 250;
                 int height = 140;
-//                if(i==selected_row){
-//                    if(j==0){
-//                        width = 375;
-//                        height = 210;
-//                    }
-//                }
 
                 int b = ((int)page_set[i]->tile_set.size()*255);
 
@@ -117,7 +109,7 @@ int main(int argc, char ** argv)
                 SDL_RenderCopy(renderer, page_set[i]->tile_set[j]->image->getTexture(), NULL, &dstrect);
             }
         }
-        SDL_RenderCopy(renderer, text, NULL, &textRect);
+        //SDL_RenderCopy(renderer, text, NULL, &textRect);
         SDL_RenderPresent(renderer);
     }
 

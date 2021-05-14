@@ -9,6 +9,7 @@
 #include <vector>
 #include <algorithm>
 #include <SDL.h>
+#include <SDL_ttf.h>
 #include "DisneyImage.h"
 #include "DisneyCurl.h"
 #include "DisneyTile.h"
@@ -22,13 +23,14 @@ public:
     ~DisneySet();
     void Rotate(const short direction);
     void PushBack(std::shared_ptr<DisneyTile> tile);
+    void LoadBackground(SDL_Renderer* renderer, TTF_Font* font);
     int GetSize();
     std::vector<std::shared_ptr<DisneyTile>> tile_set;
     static const short LEFT = 1;
     static const short RIGHT = -1;
 private:
     void ParseSet(json data, SDL_Renderer* renderer);
-    void parse_ref_set(json data, SDL_Renderer* renderer);
+    void RenderText(std::string text, SDL_Rect rect, TTF_Font* font, SDL_Renderer* renderer);
 
 };
 
