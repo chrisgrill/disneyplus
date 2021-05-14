@@ -22,7 +22,6 @@ public:
     DisneySet(json data, SDL_Renderer* renderer);
     ~DisneySet();
     void Rotate(const short direction);
-    void PushBack(std::shared_ptr<DisneyTile> tile);
     void LoadBackground(SDL_Renderer* renderer, TTF_Font* font);
     int GetSize();
     std::vector<std::shared_ptr<DisneyTile>> tile_set;

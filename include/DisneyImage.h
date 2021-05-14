@@ -11,8 +11,6 @@
 
 class DisneyImage{
 public:
-    DisneyImage();
-    DisneyImage(std::string filename);
     DisneyImage(unsigned char* data, int len);
     ~DisneyImage();
 

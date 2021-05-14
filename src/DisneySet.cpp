@@ -32,10 +32,6 @@ void DisneySet::Rotate(const short direction) {
     std::rotate(tile_set.begin(), tile_set.begin()+shift, tile_set.end());
 }
 
-void DisneySet::PushBack(std::shared_ptr<DisneyTile> tile) {
-    tile_set.push_back(tile);
-}
-
 void DisneySet::RenderText(std::string text, SDL_Rect rect, TTF_Font* font, SDL_Renderer* renderer) {
     SDL_Color textColor           = { 0xFF, 0xFF, 0xFF, 0xFF };
     SDL_Texture *text_tex = NULL;

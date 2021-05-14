@@ -12,56 +12,40 @@ using json = nlohmann::json;
 
 int main(int argc, char ** argv)
 {
-    std::string home_json = DisneyCurl::GetJson("https://cd-static.bamgrid.com/dp-117731241344/home.json");
-    json data = json::parse(home_json)["data"]["StandardCollection"]["containers"];
-    std::cout << data.size() << std::endl;
 
-    std::vector<std::shared_ptr<DisneySet>> page_set;
 
-    bool quit = false;
-    SDL_Event event;
+    // Initialize SDL and SDL_ttf components needed downstream.
     SDL_Init(SDL_INIT_VIDEO);
     TTF_Init();
 
     SDL_Window * window = SDL_CreateWindow("Disney+",
                                            SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1280, 720, 0);
     SDL_Renderer * renderer = SDL_CreateRenderer(window, -1, 0);
-    /*--------------------------------- Text Setup------------------------------------------------------------------------*/
     TTF_Font *font = TTF_OpenFont("../fonts/DejaVuSans.ttf", 40);
     if(!font) {
         printf("Unable to load font: '%s'!\n"
                "SDL2_ttf Error: %s\n", "../fonts/DejaVuSans.ttf", TTF_GetError());
         return 0;
     }
-//    SDL_Color textColor           = { 0x00, 0x00, 0x00, 0xFF };
-//    SDL_Color textBackgroundColor = { 0xFF, 0xFF, 0xFF, 0xFF };
-//    SDL_Texture *text = NULL;
-//    SDL_Rect textRect = {5,5,200,140};
-//    SDL_Surface *textSurface = TTF_RenderText_Shaded(font, "Rated PG-13", textColor, textBackgroundColor);
-//    if(!textSurface) {
-//        printf("Unable to render text surface!\n"
-//               "SDL2_ttf Error: %s\n", TTF_GetError());
-//    } else {
-//        // Create texture from surface pixels
-//        text = SDL_CreateTextureFromSurface(renderer, textSurface);
-//        if (!text) {
-//            printf("Unable to create texture from rendered text!\n"
-//                   "SDL2 Error: %s\n", SDL_GetError());
-//            return 0;
-//        }
-//        SDL_FreeSurface(textSurface);
-//    }
-    /*--------------------------------------------------------- End Text -------------------------------------------------*/
 
-    /* Load data */
+
+    // Load data
+    std::string home_json = DisneyCurl::GetJson("https://cd-static.bamgrid.com/dp-117731241344/home.json");
+    json data = json::parse(home_json)["data"]["StandardCollection"]["containers"];
+    std::cout << data.size() << std::endl;
+
+    std::vector<std::shared_ptr<DisneySet>> page_set;
     for(int i=0;i<data.size();i++){
         std::shared_ptr<DisneySet> row_set = std::make_shared<DisneySet>(data[i], renderer);
         if(row_set->GetSize() > 0) page_set.push_back(row_set);
     }
 
-
+    // SDL event loop
+    bool quit = false;
+    SDL_Event event;
     int x = 5;
     int y = 420;
+    // Load first background image
     page_set[0]->LoadBackground(renderer, font);
     while (!quit)
     {
@@ -92,11 +76,12 @@ int main(int argc, char ** argv)
                 break;
         }
 
-
+        // Draw white rectangle that acts as selected tile indicator
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 0);
         SDL_Rect border = {3,420,253,143};
         SDL_RenderFillRect(renderer, &border);
 
+        // Render tile sets
         for(int i=0; i < page_set.size(); i++){
             for(int j=0; j < page_set[i]->tile_set.size(); j++){
                 int width = 250;
@@ -109,7 +94,6 @@ int main(int argc, char ** argv)
                 SDL_RenderCopy(renderer, page_set[i]->tile_set[j]->image->getTexture(), NULL, &dstrect);
             }
         }
-        //SDL_RenderCopy(renderer, text, NULL, &textRect);
         SDL_RenderPresent(renderer);
     }
 
