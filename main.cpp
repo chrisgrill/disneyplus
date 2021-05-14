@@ -4,6 +4,7 @@
 #include <iostream>
 #include <memory>
 #include <algorithm>
+#include <future>
 #include "DisneyCurl.h"
 #include "DisneySet.h"
 #include "json/single_include/nlohmann/json.hpp"
@@ -23,7 +24,7 @@ int main(int argc, char ** argv)
     TTF_Init();
 
     SDL_Window * window = SDL_CreateWindow("Disney+",
-                                           SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1920, 1080, 0);
+                                           SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1280, 720, 0);
     SDL_Renderer * renderer = SDL_CreateRenderer(window, -1, 0);
     /*--------------------------------- Text Setup------------------------------------------------------------------------*/
     TTF_Font *font = TTF_OpenFont("../fonts/DejaVuSans.ttf", 40);
@@ -48,20 +49,22 @@ int main(int argc, char ** argv)
                    "SDL2 Error: %s\n", SDL_GetError());
             return 0;
         }
+        SDL_FreeSurface(textSurface);
     }
     /*--------------------------------------------------------- End Text -------------------------------------------------*/
+
+    /* Load data */
     for(int i=0;i<data.size();i++){
         DisneySet* row_set = new DisneySet(data[i], renderer);
-        if(row_set->getSize() > 0) page_set.push_back(row_set);
+        if(row_set->GetSize() > 0) page_set.push_back(row_set);
     }
 
     int x = 5;
-    int y = 280;
+    int y = 420;
     int selected_row = 0;
     while (!quit)
     {
         SDL_WaitEvent(&event);
-
         switch (event.type)
         {
             case SDL_QUIT:
@@ -70,10 +73,10 @@ int main(int argc, char ** argv)
             case SDL_KEYDOWN:
                 switch (event.key.keysym.sym){
                     case SDLK_RIGHT:
-                        page_set[selected_row]->rotate(DisneySet::LEFT) ;
+                        page_set[selected_row]->Rotate(DisneySet::LEFT) ;
                         break;
                     case SDLK_LEFT:
-                        page_set[selected_row]->rotate(DisneySet::RIGHT) ;
+                        page_set[selected_row]->Rotate(DisneySet::RIGHT) ;
                         break;
                     case SDLK_UP:
                         std::rotate(page_set.begin(), page_set.begin()-1+page_set.size(), page_set.end());
@@ -83,13 +86,17 @@ int main(int argc, char ** argv)
                         std::rotate(page_set.begin(), page_set.begin()+1, page_set.end());
                         break;
                 }
+
+                std::shared_ptr<DisneyImage> background = DisneyCurl::GetImage(page_set[0]->tile_set[0]->background_url);
+                SDL_Texture * back_tex = SDL_CreateTextureFromSurface(renderer, background->getSurf());
+                SDL_Rect back_rec = {0,0,1280,720};
+                SDL_RenderCopy(renderer, back_tex, NULL, &back_rec);
                 break;
         }
 
-        SDL_Rect back_rec = {0,0,1280,720};
-        //SDL_RenderCopy(renderer, back_tex, NULL, &back_rec);
+
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 0);
-        SDL_Rect border = {3,280+((int)selected_row*145),253,143};
+        SDL_Rect border = {3,420+((int)selected_row*145),253,143};
         SDL_RenderFillRect(renderer, &border);
 
         for(int i=0; i < page_set.size(); i++){
@@ -107,7 +114,7 @@ int main(int argc, char ** argv)
 
                 int offset = (x+(j * 255));
                 SDL_Rect dstrect = { offset+b% b, y+(i*145), width, height };
-                SDL_RenderCopy(renderer, page_set[i]->tile_set[j]->getTexture(), NULL, &dstrect);
+                SDL_RenderCopy(renderer, page_set[i]->tile_set[j]->image->getTexture(), NULL, &dstrect);
             }
         }
         SDL_RenderCopy(renderer, text, NULL, &textRect);

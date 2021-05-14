@@ -97,7 +97,7 @@ std::string DisneyCurl::GetJson(std::string url){
 
 std::shared_ptr<DisneyImage> DisneyCurl::GetImage(std::string url){
     struct MemoryStruct chunk = Request(url);
-    std::shared_ptr<DisneyImage> di = std::make_shared<DisneyImage>((unsigned char*)chunk.memory, chunk.size);//new DisneyImage((unsigned char*)chunk.memory, chunk.size);
+    std::shared_ptr<DisneyImage> di = std::make_shared<DisneyImage>((unsigned char*)chunk.memory, chunk.size);
     free(chunk.memory);
     return di;
 }
